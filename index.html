@@ -15,6 +15,21 @@
   <meta name="apple-mobile-web-app-title" content="記帳">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="stylesheet" href="styles.css">
+  <script>
+    // 手機若開啟「桌面版網站」模式，瀏覽器會忽略 viewport 設定，以約 980px 寬排版導致畫面很小。
+    // 偵測到這種情況時，用 CSS zoom 放大回手機實際寬度。
+    (function () {
+      function fit() {
+        var touch = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+        var sw = Math.min(screen.width, screen.height);
+        if (window.innerWidth > window.innerHeight) sw = Math.max(screen.width, screen.height);
+        var ratio = window.innerWidth / sw;
+        document.documentElement.style.zoom = touch && sw > 0 && ratio > 1.15 ? ratio.toFixed(3) : '';
+      }
+      fit();
+      window.addEventListener('orientationchange', function () { setTimeout(fit, 300); });
+    })();
+  </script>
 </head>
 <body>
   <header class="topbar">
