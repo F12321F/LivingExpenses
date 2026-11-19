@@ -1,0 +1,14 @@
+{
+  "name": "生活記帳",
+  "short_name": "記帳",
+  "description": "生活開銷記帳：分類記帳、分類統計與收支總覽",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#0f766e",
+  "lang": "zh-Hant",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

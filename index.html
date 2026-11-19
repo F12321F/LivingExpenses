@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="description" content="生活開銷記帳：分類記帳、分類統計與收支總覽">
+  <title>生活記帳</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1 id="viewTitle">記帳</h1>
+  </header>
+
+  <main>
+    <!-- 記帳明細 -->
+    <section id="view-records" class="view active">
+      <div class="period-nav">
+        <button class="icon-btn" data-nav="records" data-step="-1" aria-label="上個月">‹</button>
+        <span id="recordsPeriod" class="period-label"></span>
+        <button class="icon-btn" data-nav="records" data-step="1" aria-label="下個月">›</button>
+      </div>
+      <div class="summary" id="recordsSummary"></div>
+      <div class="filters">
+        <select id="filterType" aria-label="類型篩選">
+          <option value="all">全部</option>
+          <option value="expense">支出</option>
+          <option value="income">收入</option>
+        </select>
+        <select id="filterCategory" aria-label="分類篩選"></select>
+        <input id="filterText" type="search" placeholder="搜尋備註…" aria-label="搜尋備註">
+      </div>
+      <div id="recordList"></div>
+    </section>
+
+    <!-- 統計 -->
+    <section id="view-stats" class="view">
+      <div class="seg" id="statsRange">
+        <button data-range="month" class="on">月</button>
+        <button data-range="year">年</button>
+        <button data-range="all">全部</button>
+        <button data-range="custom">自訂</button>
+      </div>
+      <div class="period-nav" id="statsNav">
+        <button class="icon-btn" data-nav="stats" data-step="-1" aria-label="上一期">‹</button>
+        <span id="statsPeriod" class="period-label"></span>
+        <button class="icon-btn" data-nav="stats" data-step="1" aria-label="下一期">›</button>
+      </div>
+      <div class="custom-range hidden" id="customRange">
+        <input type="date" id="rangeFrom" aria-label="開始日期">
+        <span>至</span>
+        <input type="date" id="rangeTo" aria-label="結束日期">
+      </div>
+
+      <h2 class="section-title">綜合收支</h2>
+      <div class="summary big" id="statsSummary"></div>
+      <div class="card">
+        <div class="card-head">
+          <h3 id="trendTitle">收支趨勢</h3>
+          <div class="legend"><span class="dot income"></span>收入<span class="dot expense"></span>支出</div>
+        </div>
+        <div id="trendChart" class="chart"></div>
+      </div>
+
+      <h2 class="section-title">分類統計</h2>
+      <div class="seg small" id="catType">
+        <button data-type="expense" class="on">支出</button>
+        <button data-type="income">收入</button>
+      </div>
+      <div class="card">
+        <div class="donut-wrap">
+          <div id="donut"></div>
+        </div>
+        <div id="catList"></div>
+      </div>
+    </section>
+
+    <!-- 設定 -->
+    <section id="view-settings" class="view">
+      <h2 class="section-title">分類管理</h2>
+      <div class="seg small" id="manageType">
+        <button data-type="expense" class="on">支出分類</button>
+        <button data-type="income">收入分類</button>
+      </div>
+      <div class="card" id="catManage"></div>
+      <form class="card add-cat" id="addCatForm">
+        <input id="newCatIcon" maxlength="2" placeholder="🏷️" aria-label="圖示" class="emoji-in">
+        <input id="newCatName" maxlength="10" placeholder="新分類名稱" aria-label="新分類名稱" required>
+        <input id="newCatColor" type="color" value="#6366f1" aria-label="顏色">
+        <button class="btn primary" type="submit">新增</button>
+      </form>
+
+      <h2 class="section-title">資料</h2>
+      <div class="card stack">
+        <button class="btn" id="exportCsv">匯出 CSV（可用 Excel 開啟）</button>
+        <button class="btn" id="exportJson">備份資料（JSON）</button>
+        <label class="btn">還原備份（JSON）<input type="file" id="importJson" accept="application/json,.json" hidden></label>
+        <button class="btn danger" id="clearAll">清除所有資料</button>
+      </div>
+      <p class="hint">資料只儲存在這台裝置的瀏覽器中，建議定期備份。</p>
+    </section>
+  </main>
+
+  <button class="fab" id="fab" aria-label="新增一筆">＋</button>
+
+  <nav class="tabbar">
+    <button data-view="records" class="on"><span>📒</span>記帳</button>
+    <button data-view="stats"><span>📊</span>統計</button>
+    <button data-view="settings"><span>⚙️</span>設定</button>
+  </nav>
+
+  <!-- 新增 / 編輯 -->
+  <dialog id="txDialog">
+    <form id="txForm" method="dialog">
+      <div class="seg" id="txType">
+        <button type="button" data-type="expense" class="on">支出</button>
+        <button type="button" data-type="income">收入</button>
+      </div>
+      <label class="amount-field">
+        <span>NT$</span>
+        <input id="txAmount" type="number" inputmode="decimal" step="0.01" min="0.01" placeholder="0" required>
+      </label>
+      <div class="cat-grid" id="txCats"></div>
+      <div class="row">
+        <input id="txDate" type="date" required aria-label="日期">
+        <input id="txNote" type="text" maxlength="60" placeholder="備註（選填）" aria-label="備註">
+      </div>
+      <div class="actions">
+        <button type="button" class="btn danger hidden" id="txDelete">刪除</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn" id="txCancel">取消</button>
+        <button type="submit" class="btn primary">儲存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
