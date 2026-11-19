@@ -1,6 +1,6 @@
 // 離線快取：網路優先，失敗時使用快取
-const CACHE = 'living-expenses-v2';
-const ASSETS = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.json', 'icon.svg'];
+const CACHE = 'living-expenses-v3';
+const ASSETS = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.json', 'icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
