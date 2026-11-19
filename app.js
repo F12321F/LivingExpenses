@@ -600,8 +600,8 @@ $('#exportJson').addEventListener('click', () => {
 });
 
 /**
- * 合併匯入：分類依「類型＋名稱」對應，沒有的就新增；紀錄依 id 去重。
- * 回傳 { added, skipped, newCats }
+ * 合併匯入：分類依「類型＋名稱」對應，沒有的就新增；相同 id 的紀錄會被更新而不重複新增。
+ * 回傳 { added, updated, skipped, newCats }
  */
 function mergeData(data) {
   const catMap = new Map(); // 檔案中的分類 id → 本機分類 id
@@ -617,22 +617,28 @@ function mergeData(data) {
     catMap.set(c.id, local.id);
   }
   const ids = new Set(state.transactions.map(t => t.id));
-  let added = 0, skipped = 0;
+  let added = 0, updated = 0, skipped = 0;
   for (const t of data.transactions || []) {
     const amount = Number(t && t.amount);
     if (!t || !(amount > 0) || !/^\d{4}-\d{2}-\d{2}$/.test(t.date) || !['income', 'expense'].includes(t.type)) { skipped++; continue; }
     const id = t.id || uid();
-    if (ids.has(id)) { skipped++; continue; }
     let categoryId = catMap.get(t.categoryId);
     if (!categoryId) {
       const fb = state.categories.find(x => x.type === t.type && x.name === '其他') || state.categories.find(x => x.type === t.type);
       categoryId = fb && fb.id;
     }
-    state.transactions.push({ id, type: t.type, amount, categoryId, date: t.date, note: String(t.note || '').slice(0, 60), createdAt: t.createdAt || Date.now() });
+    const rec = { type: t.type, amount, categoryId, date: t.date, note: String(t.note || '').slice(0, 60) };
+    if (ids.has(id)) {
+      // 同一筆紀錄（相同 id）：用檔案內容更新，方便修正後重新匯入
+      Object.assign(state.transactions.find(x => x.id === id), rec);
+      updated++;
+      continue;
+    }
+    state.transactions.push({ id, ...rec, createdAt: t.createdAt || Date.now() });
     ids.add(id);
     added++;
   }
-  return { added, skipped, newCats };
+  return { added, updated, skipped, newCats };
 }
 
 $('#mergeJson').addEventListener('change', async e => {
@@ -646,7 +652,7 @@ $('#mergeJson').addEventListener('change', async e => {
     if (!confirm(`檔案含 ${data.transactions.length} 筆紀錄（收入 ${money(s.income)}、支出 ${money(s.expense)}），要合併到目前資料嗎？`)) return;
     const r = mergeData(data);
     save();
-    alert(`匯入完成：新增 ${r.added} 筆${r.skipped ? `，略過 ${r.skipped} 筆（重複或格式錯誤）` : ''}${r.newCats ? `，新增 ${r.newCats} 個分類` : ''}。`);
+    alert(`匯入完成：新增 ${r.added} 筆${r.updated ? `，更新 ${r.updated} 筆` : ''}${r.skipped ? `，略過 ${r.skipped} 筆（格式錯誤）` : ''}${r.newCats ? `，新增 ${r.newCats} 個分類` : ''}。`);
     render();
   } catch (err) {
     toast('匯入失敗：' + err.message);
