@@ -634,7 +634,7 @@ function mergeData(data) {
       const fb = state.categories.find(x => x.type === t.type && x.name === '其他') || state.categories.find(x => x.type === t.type);
       categoryId = fb && fb.id;
     }
-    const rec = { type: t.type, amount, categoryId, date: t.date, note: String(t.note || '').slice(0, 60) };
+    const rec = { type: t.type, amount, categoryId, date: t.date, note: String(t.note || '').slice(0, 300) };
     if (ids.has(id)) {
       // 同一筆紀錄（相同 id）：用檔案內容更新，方便修正後重新匯入
       Object.assign(state.transactions.find(x => x.id === id), rec);
