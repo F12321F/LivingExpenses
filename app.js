@@ -4,14 +4,18 @@
 const STORAGE_KEY = 'livingExpenses.v1';
 
 const DEFAULT_CATEGORIES = [
-  ['expense', '餐飲', '🍱', '#f97316'],
+  ['expense', '早餐', '🍳', '#fb923c'],
+  ['expense', '午餐', '🍱', '#f97316'],
+  ['expense', '晚餐', '🍜', '#ea580c'],
   ['expense', '交通', '🚌', '#3b82f6'],
   ['expense', '購物', '🛍️', '#ec4899'],
+  ['expense', '服裝', '👕', '#0ea5e9'],
   ['expense', '居住', '🏠', '#8b5cf6'],
   ['expense', '水電瓦斯', '💡', '#eab308'],
   ['expense', '通訊網路', '📱', '#06b6d4'],
   ['expense', '娛樂', '🎮', '#a855f7'],
   ['expense', '醫療', '💊', '#ef4444'],
+  ['expense', '中醫', '🌿', '#16a34a'],
   ['expense', '教育', '📚', '#0ea5e9'],
   ['expense', '日用品', '🧻', '#84cc16'],
   ['expense', '保險', '🛡️', '#64748b'],
