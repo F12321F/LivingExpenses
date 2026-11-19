@@ -1,5 +1,5 @@
 // 離線快取：網路優先，失敗時使用快取
-const CACHE = 'living-expenses-v1';
+const CACHE = 'living-expenses-v2';
 const ASSETS = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.json', 'icon.svg'];
 
 self.addEventListener('install', e => {

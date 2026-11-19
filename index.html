@@ -124,7 +124,17 @@
         <span>NT$</span>
         <input id="txAmount" type="number" inputmode="decimal" step="0.01" min="0.01" placeholder="0" required>
       </label>
+      <div class="cat-head">
+        <span>分類</span>
+        <button type="button" class="link-btn" id="catEditToggle">編輯分類</button>
+      </div>
       <div class="cat-grid" id="txCats"></div>
+      <div class="cat-new hidden" id="catNew">
+        <input id="qcIcon" maxlength="4" placeholder="🏷️" aria-label="新分類圖示" class="emoji-in">
+        <input id="qcName" maxlength="10" placeholder="新分類名稱" aria-label="新分類名稱">
+        <input id="qcColor" type="color" value="#6366f1" aria-label="新分類顏色">
+        <button type="button" class="btn primary" id="qcAdd">新增</button>
+      </div>
       <div class="row">
         <input id="txDate" type="date" required aria-label="日期">
         <input id="txNote" type="text" maxlength="60" placeholder="備註（選填）" aria-label="備註">

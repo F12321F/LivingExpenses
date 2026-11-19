@@ -177,9 +177,21 @@ dialog::backdrop { background: rgba(0, 0, 0, .45); }
 .amount-field { display: flex; align-items: baseline; gap: 8px; border-bottom: 2px solid var(--line); padding: 6px 4px; margin: 6px 0 14px; }
 .amount-field span { color: var(--muted); font-weight: 600; }
 .amount-field input { flex: 1; min-width: 0; border: 0; background: none; font-size: 32px; font-weight: 700; outline: none; text-align: right; font-variant-numeric: tabular-nums; }
-.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; max-height: 40vh; overflow-y: auto; margin-bottom: 14px; }
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; max-height: 40vh; overflow-y: auto; margin: 0 -8px 14px; padding: 8px; }
 .cat-pick { border: 2px solid transparent; background: var(--bg); border-radius: 12px; padding: 8px 4px; cursor: pointer; display: grid; justify-items: center; gap: 4px; font-size: 12px; }
 .cat-pick .e { font-size: 22px; }
+.cat-head { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.link-btn { border: 0; background: none; color: var(--primary); font-weight: 600; cursor: pointer; padding: 4px; }
+.cat-pick { position: relative; }
+.cat-pick.add { border: 2px dashed var(--line); background: none; color: var(--muted); }
+.cat-pick .x {
+  position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--expense); color: #fff; font-size: 12px; line-height: 20px; text-align: center;
+}
+.cat-grid.editing .cat-pick:not(.add) { border-color: var(--expense); border-style: dashed; }
+.cat-new { display: grid; grid-template-columns: 52px 1fr 44px auto; gap: 8px; align-items: center; margin: -4px 0 14px; }
+.cat-new input { min-width: 0; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
+.cat-new input[type=color] { padding: 2px; height: 38px; width: 44px; }
 .cat-pick.on { border-color: var(--primary); background: var(--primary-soft); }
 .row { display: grid; grid-template-columns: 150px 1fr; gap: 8px; margin-bottom: 14px; }
 .actions { display: flex; gap: 8px; align-items: center; }

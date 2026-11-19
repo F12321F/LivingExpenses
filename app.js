@@ -51,6 +51,36 @@ function save() {
 const catById = id => state.categories.find(c => c.id === id)
   || { id, name: '未分類', icon: '❔', color: '#94a3b8', type: 'expense' };
 
+/** 新增分類，成功回傳新分類，失敗回傳 null */
+function addCategory(type, name, icon, color) {
+  name = name.trim().slice(0, 10);
+  if (!name) { toast('請輸入分類名稱'); return null; }
+  if (state.categories.some(c => c.type === type && c.name === name)) { toast('已有同名分類'); return null; }
+  const cat = { id: 'c' + uid(), type, name, icon: icon.trim() || '🏷️', color };
+  state.categories.push(cat);
+  save();
+  toast(`已新增分類「${name}」`);
+  return cat;
+}
+
+/** 刪除分類；有紀錄時移到同類型的「其他」(或第一個分類)。回傳是否刪除 */
+function deleteCategory(id) {
+  const c = state.categories.find(x => x.id === id);
+  if (!c) return false;
+  if (state.categories.filter(x => x.type === c.type).length <= 1) { toast('至少需保留一個分類'); return false; }
+  const used = state.transactions.filter(t => t.categoryId === id);
+  if (used.length) {
+    const fallback = state.categories.find(x => x.type === c.type && x.id !== id && x.name === '其他')
+      || state.categories.find(x => x.type === c.type && x.id !== id);
+    if (!confirm(`「${c.name}」有 ${used.length} 筆紀錄，刪除後將移到「${fallback.name}」。確定刪除？`)) return false;
+    used.forEach(t => { t.categoryId = fallback.id; });
+  } else if (!confirm(`刪除分類「${c.name}」？`)) return false;
+  state.categories = state.categories.filter(x => x.id !== id);
+  save();
+  toast(`已刪除分類「${c.name}」`);
+  return true;
+}
+
 /* ========== 工具 ========== */
 const $ = sel => document.querySelector(sel);
 const $$ = sel => [...document.querySelectorAll(sel)];
@@ -382,12 +412,40 @@ let editing = null; // 編輯中的交易 id
 let txType = 'expense';
 let txCat = null;
 
+let catEditing = false;
+
 function renderTxCats() {
   const cats = state.categories.filter(c => c.type === txType);
   if (!cats.some(c => c.id === txCat)) txCat = cats[0]?.id || null;
-  $('#txCats').innerHTML = cats.map(c =>
-    `<button type="button" class="cat-pick ${c.id === txCat ? 'on' : ''}" data-id="${c.id}"><span class="e">${esc(c.icon)}</span>${esc(c.name)}</button>`).join('')
-    || '<div class="hint">沒有分類，請到「設定」新增</div>';
+  const grid = $('#txCats');
+  grid.classList.toggle('editing', catEditing);
+  grid.innerHTML = cats.map(c =>
+    `<button type="button" class="cat-pick ${c.id === txCat && !catEditing ? 'on' : ''}" data-id="${c.id}" ${catEditing ? `aria-label="刪除 ${esc(c.name)}"` : ''}>
+      <span class="e">${esc(c.icon)}</span>${esc(c.name)}${catEditing ? '<span class="x" aria-hidden="true">✕</span>' : ''}
+    </button>`).join('')
+    + `<button type="button" class="cat-pick add" data-add="1"><span class="e">＋</span>新增分類</button>`;
+  $('#catEditToggle').textContent = catEditing ? '完成' : '編輯分類';
+}
+
+function setCatEditing(on) {
+  catEditing = on;
+  if (on) $('#catNew').classList.add('hidden');
+  renderTxCats();
+}
+
+function showCatNew() {
+  setCatEditing(false);
+  $('#catNew').classList.remove('hidden');
+  $('#qcName').focus();
+}
+
+function quickAddCategory() {
+  const cat = addCategory(txType, $('#qcName').value, $('#qcIcon').value, $('#qcColor').value);
+  if (!cat) return;
+  txCat = cat.id;
+  $('#qcName').value = ''; $('#qcIcon').value = '';
+  $('#catNew').classList.add('hidden');
+  renderTxCats();
 }
 
 function setTxType(type) {
@@ -399,6 +457,8 @@ function setTxType(type) {
 function openTx(tx) {
   editing = tx ? tx.id : null;
   txCat = tx ? tx.categoryId : null;
+  catEditing = false;
+  $('#catNew').classList.add('hidden');
   setTxType(tx ? tx.type : 'expense');
   $('#txAmount').value = tx ? tx.amount : '';
   // 新增時：在記帳頁瀏覽其他月份，預設日期落在該月
@@ -415,17 +475,27 @@ function openTx(tx) {
 
 $('#fab').addEventListener('click', () => openTx(null));
 $('#txType').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setTxType(b.dataset.type); });
+$('#catEditToggle').addEventListener('click', () => setCatEditing(!catEditing));
+$('#qcAdd').addEventListener('click', quickAddCategory);
+$('#qcName').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); quickAddCategory(); } });
 $('#txCats').addEventListener('click', e => {
   const b = e.target.closest('.cat-pick');
   if (!b) return;
+  if (b.dataset.add) { showCatNew(); return; }
+  if (catEditing) {
+    if (deleteCategory(b.dataset.id)) renderTxCats();
+    return;
+  }
   txCat = b.dataset.id;
   $$('#txCats .cat-pick').forEach(x => x.classList.toggle('on', x === b));
 });
 $('#txCancel').addEventListener('click', () => dlg.close());
+dlg.addEventListener('close', render);
 dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
 
 $('#txForm').addEventListener('submit', e => {
   e.preventDefault();
+  if (catEditing) setCatEditing(false);
   const amount = Math.round(parseFloat($('#txAmount').value) * 100) / 100;
   if (!(amount > 0)) { toast('請輸入正確金額'); return; }
   if (!txCat) { toast('請選擇分類'); return; }
@@ -489,15 +559,8 @@ $('#catManage').addEventListener('click', e => {
     const icon = prompt('圖示（emoji）', c.icon);
     if (icon && icon.trim()) c.icon = icon.trim();
   } else if (b.dataset.act === 'del') {
-    const used = state.transactions.filter(t => t.categoryId === id);
-    if (state.categories.filter(x => x.type === c.type).length <= 1) { toast('至少需保留一個分類'); return; }
-    if (used.length) {
-      const fallback = state.categories.find(x => x.type === c.type && x.id !== id && x.name === '其他')
-        || state.categories.find(x => x.type === c.type && x.id !== id);
-      if (!confirm(`「${c.name}」有 ${used.length} 筆紀錄，刪除後將移到「${fallback.name}」。確定刪除？`)) return;
-      used.forEach(t => { t.categoryId = fallback.id; });
-    } else if (!confirm(`刪除分類「${c.name}」？`)) return;
-    state.categories = state.categories.filter(x => x.id !== id);
+    if (deleteCategory(id)) renderSettings();
+    return;
   } else if (b.dataset.act === 'up') {
     const i = state.categories.indexOf(c);
     let j = i - 1;
@@ -510,14 +573,9 @@ $('#catManage').addEventListener('click', e => {
 
 $('#addCatForm').addEventListener('submit', e => {
   e.preventDefault();
-  const name = $('#newCatName').value.trim();
-  if (!name) return;
-  if (state.categories.some(c => c.type === manageType && c.name === name)) { toast('已有同名分類'); return; }
-  state.categories.push({ id: 'c' + uid(), type: manageType, name, icon: $('#newCatIcon').value.trim() || '🏷️', color: $('#newCatColor').value });
-  save();
+  if (!addCategory(manageType, $('#newCatName').value, $('#newCatIcon').value, $('#newCatColor').value)) return;
   e.target.reset();
   renderSettings();
-  toast('已新增分類');
 });
 
 /* ========== 匯出 / 匯入 ========== */
