@@ -1,5 +1,5 @@
 // 離線快取：網路優先，失敗時使用快取
-const CACHE = 'living-expenses-v8';
+const CACHE = 'living-expenses-v9';
 const ASSETS = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.json', 'icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

@@ -57,7 +57,7 @@ const catById = id => state.categories.find(c => c.id === id)
 
 /** 新增分類，成功回傳新分類，失敗回傳 null */
 function addCategory(type, name, icon, color) {
-  name = name.trim().slice(0, 10);
+  name = name.trim().slice(0, 20);
   if (!name) { toast('請輸入分類名稱'); return null; }
   if (state.categories.some(c => c.type === type && c.name === name)) { toast('已有同名分類'); return null; }
   const cat = { id: 'c' + uid(), type, name, icon: icon.trim() || '🏷️', color };
@@ -561,7 +561,7 @@ $('#catManage').addEventListener('click', e => {
   const c = state.categories.find(x => x.id === id);
   if (b.dataset.act === 'edit') {
     const name = prompt('分類名稱', c.name);
-    if (name && name.trim()) c.name = name.trim().slice(0, 10);
+    if (name && name.trim()) c.name = name.trim().slice(0, 20);
     const icon = prompt('圖示（emoji）', c.icon);
     if (icon && icon.trim()) c.icon = icon.trim();
   } else if (b.dataset.act === 'del') {
@@ -614,9 +614,10 @@ function mergeData(data) {
   let newCats = 0;
   for (const c of data.categories || []) {
     if (!c || !c.name || !['income', 'expense'].includes(c.type)) continue;
-    let local = state.categories.find(x => x.type === c.type && x.name === c.name);
+    const name = String(c.name).trim().slice(0, 20);
+    let local = state.categories.find(x => x.type === c.type && x.name === name);
     if (!local) {
-      local = { id: 'c' + uid(), type: c.type, name: String(c.name).slice(0, 10), icon: c.icon || '🏷️', color: c.color || '#94a3b8' };
+      local = { id: 'c' + uid(), type: c.type, name, icon: c.icon || '🏷️', color: c.color || '#94a3b8' };
       state.categories.push(local);
       newCats++;
     }
