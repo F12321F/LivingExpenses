@@ -599,6 +599,60 @@ $('#exportJson').addEventListener('click', () => {
   download(`記帳備份_${today()}.json`, JSON.stringify(state, null, 2), 'application/json');
 });
 
+/**
+ * 合併匯入：分類依「類型＋名稱」對應，沒有的就新增；紀錄依 id 去重。
+ * 回傳 { added, skipped, newCats }
+ */
+function mergeData(data) {
+  const catMap = new Map(); // 檔案中的分類 id → 本機分類 id
+  let newCats = 0;
+  for (const c of data.categories || []) {
+    if (!c || !c.name || !['income', 'expense'].includes(c.type)) continue;
+    let local = state.categories.find(x => x.type === c.type && x.name === c.name);
+    if (!local) {
+      local = { id: 'c' + uid(), type: c.type, name: String(c.name).slice(0, 10), icon: c.icon || '🏷️', color: c.color || '#94a3b8' };
+      state.categories.push(local);
+      newCats++;
+    }
+    catMap.set(c.id, local.id);
+  }
+  const ids = new Set(state.transactions.map(t => t.id));
+  let added = 0, skipped = 0;
+  for (const t of data.transactions || []) {
+    const amount = Number(t && t.amount);
+    if (!t || !(amount > 0) || !/^\d{4}-\d{2}-\d{2}$/.test(t.date) || !['income', 'expense'].includes(t.type)) { skipped++; continue; }
+    const id = t.id || uid();
+    if (ids.has(id)) { skipped++; continue; }
+    let categoryId = catMap.get(t.categoryId);
+    if (!categoryId) {
+      const fb = state.categories.find(x => x.type === t.type && x.name === '其他') || state.categories.find(x => x.type === t.type);
+      categoryId = fb && fb.id;
+    }
+    state.transactions.push({ id, type: t.type, amount, categoryId, date: t.date, note: String(t.note || '').slice(0, 60), createdAt: t.createdAt || Date.now() });
+    ids.add(id);
+    added++;
+  }
+  return { added, skipped, newCats };
+}
+
+$('#mergeJson').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    if (!Array.isArray(data.transactions)) throw new Error('格式不符');
+    const s = sumBy(data.transactions.map(t => ({ ...t, amount: Number(t.amount) || 0 })));
+    if (!confirm(`檔案含 ${data.transactions.length} 筆紀錄（收入 ${money(s.income)}、支出 ${money(s.expense)}），要合併到目前資料嗎？`)) return;
+    const r = mergeData(data);
+    save();
+    alert(`匯入完成：新增 ${r.added} 筆${r.skipped ? `，略過 ${r.skipped} 筆（重複或格式錯誤）` : ''}${r.newCats ? `，新增 ${r.newCats} 個分類` : ''}。`);
+    render();
+  } catch (err) {
+    toast('匯入失敗：' + err.message);
+  }
+});
+
 $('#importJson').addEventListener('change', async e => {
   const file = e.target.files[0];
   e.target.value = '';

@@ -118,10 +118,11 @@
       <div class="card stack">
         <button class="btn" id="exportCsv">匯出 CSV（可用 Excel 開啟）</button>
         <button class="btn" id="exportJson">備份資料（JSON）</button>
-        <label class="btn">還原備份（JSON）<input type="file" id="importJson" accept="application/json,.json" hidden></label>
+        <label class="btn primary">匯入資料並合併（JSON）<input type="file" id="mergeJson" accept="application/json,.json" hidden></label>
+        <label class="btn">還原備份・覆蓋全部（JSON）<input type="file" id="importJson" accept="application/json,.json" hidden></label>
         <button class="btn danger" id="clearAll">清除所有資料</button>
       </div>
-      <p class="hint">資料只儲存在這台裝置的瀏覽器中，建議定期備份。</p>
+      <p class="hint">「匯入並合併」會保留現有紀錄，重複的紀錄不會重複加入。<br>資料只儲存在這台裝置的瀏覽器中，建議定期備份。</p>
     </section>
   </main>
 
