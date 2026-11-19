@@ -120,11 +120,13 @@ function sumBy(list) {
 }
 
 function summaryHTML({ income, expense, balance }, extra = {}) {
+  // 金額大時省略小數，避免卡片內換行
+  const fmt = n => Math.abs(n) >= 100000 ? '$' + nf.format(Math.round(n)) : money(n);
   const item = (label, value, cls, sub) =>
     `<div class="item"><div class="label">${label}</div><div class="value ${cls}">${value}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;
-  return item('收入', money(income), 'income-c', extra.income)
-    + item('支出', money(expense), 'expense-c', extra.expense)
-    + item('結餘', (balance < 0 ? '-' : '') + money(Math.abs(balance)), balance < 0 ? 'expense-c' : '', extra.balance);
+  return item('收入', fmt(income), 'income-c', extra.income)
+    + item('支出', fmt(expense), 'expense-c', extra.expense)
+    + item('結餘', (balance < 0 ? '-' : '') + fmt(Math.abs(balance)), balance < 0 ? 'expense-c' : '', extra.balance);
 }
 
 /* ========== 導覽 ========== */
