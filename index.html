@@ -122,7 +122,11 @@
         <label class="btn">還原備份・覆蓋全部（JSON）<input type="file" id="importJson" accept="application/json,.json" hidden></label>
         <button class="btn danger" id="clearAll">清除所有資料</button>
       </div>
-      <p class="hint">「匯入並合併」會保留現有紀錄，重複匯入同一份檔案不會重複加入。<br>資料只儲存在這台裝置的瀏覽器中，建議定期備份。</p>
+      <div class="card persist-row">
+        <div><div class="persist-title">資料保護</div><div class="hint left" id="persistStatus">檢查中…</div></div>
+        <button class="btn" id="persistBtn" hidden>啟用</button>
+      </div>
+      <p class="hint">「匯入並合併」會保留現有紀錄，重複匯入同一份檔案不會重複加入。<br>資料只儲存在這台裝置的瀏覽器中，不會上傳，別人也看不到；建議定期備份。</p>
     </section>
   </main>
 

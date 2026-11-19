@@ -44,7 +44,7 @@ function loadState() {
 
 let state = loadState();
 
-function save() {
+let save = function save() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (e) {
@@ -691,8 +691,32 @@ $('#clearAll').addEventListener('click', () => {
   render();
 });
 
+/* ========== 資料保護（要求瀏覽器不要自動清除） ========== */
+async function checkPersist(request) {
+  const el = $('#persistStatus'), btn = $('#persistBtn');
+  if (!(navigator.storage && navigator.storage.persist)) {
+    el.textContent = '此瀏覽器不支援，請定期備份';
+    return;
+  }
+  let on = await navigator.storage.persisted().catch(() => false);
+  if (!on && request) on = await navigator.storage.persist().catch(() => false);
+  el.innerHTML = on
+    ? '<span class="persist-on">✓ 已啟用</span>：空間不足時瀏覽器不會自動清除記帳資料'
+    : '未啟用：手機空間不足時，瀏覽器可能自動清除資料';
+  btn.hidden = on;
+  return on;
+}
+$('#persistBtn').addEventListener('click', async () => {
+  const on = await checkPersist(true);
+  toast(on ? '已啟用資料保護' : '瀏覽器暫時拒絕，請先把 App 加到主畫面，或多使用幾次後再試');
+});
+// 存檔後也再試一次（瀏覽器常在使用者操作後才同意）
+const _save = save;
+save = function () { _save(); checkPersist(true); };
+
 /* ========== 啟動 ========== */
 render();
+checkPersist(true);
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});
